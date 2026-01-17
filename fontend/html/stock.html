@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang='th'>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock System</title>
+    <link rel="stylesheet" href="../style.css">
+
+
+</head>
+<body>
+    
+   
+    <h2> ระบบจัดการคลังสินค้า</h2>
+
+    <div class="filter-bar">
+    
+    <div class="search-wrapper">
+        <input
+        type="text"
+        id="searchInput"
+        placeholder="ค้นหารายการ"
+        oninput="showSuggestions()"
+    />
+     <div id="suggestion-box" class="suggestion-box"></div>
+    </div>
+    <span class="or-text">หรือ</span>
+
+    <select id="categorySelect" onchange="searchByCategory()">
+        <option value="">หมวดหมู่</option>
+    </select>
+
+    <button onclick="filterProducts()">ค้นหา</button>
+
+</div>
+
+
+    <div id="stock-list">
+        <i>กรุณาค้นหาหรือเลือกหมวดหมู่</i>
+    </div>
+<div id="table-wrapper" style="display:none">
+     <table>
+        <thead>
+            <tr>
+                <th>ชื่อสินค้า</th>
+                <th>หมวดหมู่</th>
+                <th>จำนวน</th>
+                <th>ลด/เพิ่ม</th>
+            </tr>
+        </thead>
+        <tbody id="productTable">
+        </tbody>
+    </table>
+</div>
+    <script src="../script.js"></script>
+    
+</body>
+</html>
