@@ -1,60 +1,63 @@
-import mysql.connector
+import os
+import psycopg2
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app,app, resources={r"/*": {"origins": "*"}})
+CORS(app)
 
 def get_db():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="",
-        database="stock_system"
+    return psycopg2.connect(
+        host=os.environ["DB_HOST"],
+        database=os.environ["DB_NAME"],
+        user=os.environ["DB_USER"],
+        password=os.environ["DB_PASSWORD"],
+        port=os.environ.get("DB_PORT", 5432)
     )
 
-@app.route('/get-stock')
+@app.route("/get-stock")
 def get_stock():
     conn = get_db()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""SELECT id, p_name, category, qty
-        FROM products""")
-    
-    result = cursor.fetchall()
-    cursor.close()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT id, p_name, qty, category
+        FROM products
+        ORDER BY created_at DESC
+    """)
+
+    rows = cur.fetchall()
+
+    data = []
+    for r in rows:
+        data.append({
+            "id": r[0],
+            "p_name": r[1],
+            "qty": r[2],
+            "category": r[3]
+        })
+
+    cur.close()
     conn.close()
-    return jsonify(result)
+    return jsonify(data)
 
-
-@app.route('/update-qty', methods=['POST'])
+@app.route("/update-qty", methods=["POST"])
 def update_qty():
     data = request.json
-    product_id = data['id']
-    change = data['change']
+    product_id = data["id"]
+    change = data["change"]
 
     conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute(
+    cur = conn.cursor()
+    cur.execute(
         "UPDATE products SET qty = qty + %s WHERE id = %s",
         (change, product_id)
     )
     conn.commit()
 
-    cursor.close()
+    cur.close()
     conn.close()
     return jsonify({"status": "ok"})
-import os
 
-def get_db():
-    return mysql.connector.connect(
-        host=os.environ.get("DB_HOST"),
-        user=os.environ.get("DB_USER"),
-        password=os.environ.get("DB_PASSWORD"),
-        database=os.environ.get("DB_NAME"),
-        port=int(os.environ.get("DB_PORT", 3306))
-    )
-
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
