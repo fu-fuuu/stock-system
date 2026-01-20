@@ -4,38 +4,41 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 def get_db():
     return psycopg2.connect(
         host=os.environ["DB_HOST"],
-        database=os.environ["DB_NAME"],
+        dbname=os.environ["DB_NAME"],
         user=os.environ["DB_USER"],
         password=os.environ["DB_PASSWORD"],
-        port=os.environ.get("DB_PORT", 5432)
+        port=int(os.environ.get("DB_PORT", 5432)),
+        sslmode="require"
     )
 
-@app.route("/get-stock")
+@app.route("/get-stock", methods=["GET"])
 def get_stock():
     conn = get_db()
     cur = conn.cursor()
 
     cur.execute("""
-        SELECT id, p_name, qty, category
-        FROM products
-        ORDER BY created_at DESC
+        SELECT
+            p.id,
+            p.p_name,
+            p.qty,
+            c.category_name
+        FROM products p
+        LEFT JOIN category c
+            ON p.category = c.c_id
+        ORDER BY p.id DESC
     """)
 
     rows = cur.fetchall()
 
-    data = []
-    for r in rows:
-        data.append({
-            "id": r[0],
-            "p_name": r[1],
-            "qty": r[2],
-            "category": r[3]
-        })
+    data = [
+        {"id": r[0], "p_name": r[1], "qty": r[2], "category_name": r[3]}
+        for r in rows
+    ]
 
     cur.close()
     conn.close()
@@ -43,7 +46,7 @@ def get_stock():
 
 @app.route("/update-qty", methods=["POST"])
 def update_qty():
-    data = request.json
+    data = request.get_json()
     product_id = data["id"]
     change = data["change"]
 
@@ -60,4 +63,5 @@ def update_qty():
     return jsonify({"status": "ok"})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
