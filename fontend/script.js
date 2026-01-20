@@ -1,7 +1,6 @@
 const API_BASE = "https://stock-system-hs80.onrender.com";
 
 let products = [];
-let selectedIndex = -1;
 
 fetch(`${API_BASE}/get-stock`)
     .then(res => {
@@ -16,11 +15,14 @@ fetch(`${API_BASE}/get-stock`)
         document.getElementById("stock-list").innerText = "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้";
     });
 
-function loadCategories(data){
+function loadCategories(data) {
     const select = document.getElementById("categorySelect");
     select.innerHTML = '<option value="" selected hidden>หมวดหมู่</option>';
 
-    const categories = [...new Set(data.map(p => p.category_name).filter(Boolean))];
+    const categories = [...new Set(
+        data.map(p => p.category_name).filter(Boolean)
+    )];
+
     categories.forEach(cat => {
         const opt = document.createElement("option");
         opt.value = cat;
@@ -29,7 +31,7 @@ function loadCategories(data){
     });
 }
 
-function filterProducts(){
+function filterProducts() {
     const search = document.getElementById("searchInput").value.trim().toLowerCase();
     const category = document.getElementById("categorySelect").value;
 
@@ -56,7 +58,7 @@ function filterProducts(){
     renderStock(filtered);
 }
 
-function renderStock(data){
+function renderStock(data) {
     const table = document.getElementById("productTable");
     const wrapper = document.getElementById("table-wrapper");
 
@@ -80,7 +82,7 @@ function renderStock(data){
     });
 }
 
-function changeQty(id, change){
+function changeQty(id, change) {
     const el = document.getElementById(`qty-${id}`);
     const current = parseInt(el.textContent);
 
@@ -90,14 +92,14 @@ function changeQty(id, change){
 
     fetch(`${API_BASE}/update-qty`, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, change })
     }).catch(() => {
         el.textContent = current;
     });
 }
 
-function searchByCategory(){
+function searchByCategory() {
     document.getElementById("searchInput").value = "";
     filterProducts();
 }
